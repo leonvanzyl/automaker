@@ -147,7 +147,7 @@ export const DEFAULT_KEYBOARD_SHORTCUTS: KeyboardShortcuts = {
   // Note: Some shortcuts share the same key (e.g., "N" for addFeature, newSession, addProfile)
   // This is intentional as they are context-specific and only active in their respective views
   addFeature: "N",        // Only active in board view
-  addContextFile: "F",    // Only active in context view
+  addContextFile: "N",    // Only active in context view
   startNext: "G",         // Only active in board view
   newSession: "N",        // Only active in agent view
   openProject: "O",       // Global shortcut
@@ -1136,6 +1136,20 @@ export const useAppStore = create<AppState & AppActions>()(
     }),
     {
       name: "automaker-storage",
+      version: 1, // Increment when making breaking changes to persisted state
+      migrate: (persistedState: unknown, version: number) => {
+        const state = persistedState as Partial<AppState>;
+
+        // Migration from version 0 (no version) to version 1:
+        // - Change addContextFile shortcut from "F" to "N"
+        if (version === 0) {
+          if (state.keyboardShortcuts?.addContextFile === "F") {
+            state.keyboardShortcuts.addContextFile = "N";
+          }
+        }
+
+        return state as AppState;
+      },
       partialize: (state) => ({
         // Project management
         projects: state.projects,

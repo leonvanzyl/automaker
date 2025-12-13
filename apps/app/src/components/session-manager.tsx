@@ -26,6 +26,7 @@ import { cn } from "@/lib/utils";
 import type { SessionListItem } from "@/types/electron";
 import { useKeyboardShortcutsConfig } from "@/hooks/use-keyboard-shortcuts";
 import { getElectronAPI } from "@/lib/electron";
+import { DeleteSessionDialog } from "@/components/delete-session-dialog";
 
 // Random session name generator
 const adjectives = [
@@ -113,6 +114,8 @@ export function SessionManager({
   const [runningSessions, setRunningSessions] = useState<Set<string>>(
     new Set()
   );
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<SessionListItem | null>(null);
 
   // Check running state for all sessions
   const checkRunningSessions = async (sessionList: SessionListItem[]) => {
@@ -286,11 +289,16 @@ export function SessionManager({
     }
   };
 
-  // Delete session
-  const handleDeleteSession = async (sessionId: string) => {
+  // Open delete session dialog
+  const handleDeleteSession = (session: SessionListItem) => {
+    setSessionToDelete(session);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Confirm delete session
+  const confirmDeleteSession = async (sessionId: string) => {
     const api = getElectronAPI();
     if (!api?.sessions) return;
-    if (!confirm("Are you sure you want to delete this session?")) return;
 
     const result = await api.sessions.delete(sessionId);
     if (result.success) {
@@ -303,6 +311,7 @@ export function SessionManager({
         }
       }
     }
+    setSessionToDelete(null);
   };
 
   const activeSessions = sessions.filter((s) => !s.isArchived);
@@ -315,20 +324,24 @@ export function SessionManager({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between mb-4">
           <CardTitle>Agent Sessions</CardTitle>
-          {activeTab === "active" && (
-            <HotkeyButton
-              variant="default"
-              size="sm"
-              onClick={handleQuickCreateSession}
-              hotkey={shortcuts.newSession}
-              hotkeyActive={false}
-              data-testid="new-session-button"
-              title={`New Session (${shortcuts.newSession})`}
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              New
-            </HotkeyButton>
-          )}
+          <HotkeyButton
+            variant="default"
+            size="sm"
+            onClick={() => {
+              // Switch to active tab if on archived tab
+              if (activeTab === "archived") {
+                setActiveTab("active");
+              }
+              handleQuickCreateSession();
+            }}
+            hotkey={shortcuts.newSession}
+            hotkeyActive={false}
+            data-testid="new-session-button"
+            title={`New Session (${shortcuts.newSession})`}
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            New
+          </HotkeyButton>
         </div>
 
         <Tabs
@@ -525,8 +538,9 @@ export function SessionManager({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleDeleteSession(session.id)}
+                    onClick={() => handleDeleteSession(session)}
                     className="h-7 w-7 p-0 text-destructive"
+                    data-testid={`delete-session-${session.id}`}
                   >
                     <Trash2 className="w-3 h-3" />
                   </Button>
@@ -552,6 +566,14 @@ export function SessionManager({
           </div>
         )}
       </CardContent>
+
+      {/* Delete Session Confirmation Dialog */}
+      <DeleteSessionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        session={sessionToDelete}
+        onConfirm={confirmDeleteSession}
+      />
     </Card>
   );
 }

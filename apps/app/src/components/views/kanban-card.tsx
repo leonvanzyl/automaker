@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DeleteConfirmDialog } from "@/components/ui/delete-confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -195,12 +196,7 @@ export const KanbanCard = memo(function KanbanCard({
   };
 
   const handleConfirmDelete = () => {
-    setIsDeleteDialogOpen(false);
     onDelete();
-  };
-
-  const handleCancelDelete = () => {
-    setIsDeleteDialogOpen(false);
   };
 
   // Dragging logic:
@@ -805,35 +801,15 @@ export const KanbanCard = memo(function KanbanCard({
       </CardContent>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent data-testid="delete-confirmation-dialog">
-          <DialogHeader>
-            <DialogTitle>Delete Feature</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this feature? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-6">
-            <Button
-              variant="ghost"
-              onClick={handleCancelDelete}
-              data-testid="cancel-delete-button"
-            >
-              Cancel
-            </Button>
-            <HotkeyButton
-              variant="destructive"
-              onClick={handleConfirmDelete}
-              data-testid="confirm-delete-button"
-              hotkey={{ key: "Enter", cmdCtrl: true }}
-              hotkeyActive={isDeleteDialogOpen}
-            >
-              Delete
-            </HotkeyButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title="Delete Feature"
+        description="Are you sure you want to delete this feature? This action cannot be undone."
+        testId="delete-confirmation-dialog"
+        confirmTestId="confirm-delete-button"
+      />
 
       {/* Summary Modal */}
       <Dialog open={isSummaryDialogOpen} onOpenChange={setIsSummaryDialogOpen}>

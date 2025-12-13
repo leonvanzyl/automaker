@@ -224,10 +224,11 @@ NEXT_PUBLIC_SERVER_URL=http://localhost:3008
   - `apps/server/src/routes/running-agents.ts` - active agent tracking
 
 - [x] **Phase 7**: Simplify Electron
-  - `apps/app/electron/main-simplified.js` - spawns server, minimal IPC
-  - `apps/app/electron/preload-simplified.js` - only native features exposed
+  - `apps/app/electron/main.js` - spawns server, minimal IPC (10 handlers for native features only)
+  - `apps/app/electron/preload.js` - only native features exposed
   - Updated `electron.ts` to detect simplified mode
   - Updated `http-api-client.ts` to use native dialogs when available
+  - Removed ~13,000 lines of dead code (obsolete services, agent-service.js, auto-mode-service.js)
 
 - [x] **Phase 8**: Production ready
   - `apps/server/src/lib/auth.ts` - API key authentication middleware
