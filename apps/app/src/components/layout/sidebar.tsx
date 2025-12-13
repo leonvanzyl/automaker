@@ -239,6 +239,25 @@ export function Sidebar() {
   // Ref for project search input
   const projectSearchInputRef = useRef<HTMLInputElement>(null);
 
+  // Auto-collapse sidebar on small screens
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-width: 1024px)'); // lg breakpoint
+
+    const handleResize = () => {
+      if (mediaQuery.matches && sidebarOpen) {
+        // Auto-collapse on small screens
+        toggleSidebar();
+      }
+    };
+
+    // Check on mount
+    handleResize();
+
+    // Listen for changes
+    mediaQuery.addEventListener('change', handleResize);
+    return () => mediaQuery.removeEventListener('change', handleResize);
+  }, [sidebarOpen, toggleSidebar]);
+
   // Filtered projects based on search query
   const filteredProjects = useMemo(() => {
     if (!projectSearchQuery.trim()) {
