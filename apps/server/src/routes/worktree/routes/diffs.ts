@@ -26,12 +26,8 @@ export function createDiffsHandler() {
         return;
       }
 
-      const worktreePath = path.join(
-        projectPath,
-        ".automaker",
-        "worktrees",
-        featureId
-      );
+      // Git worktrees are stored in project directory
+      const worktreePath = path.join(projectPath, ".worktrees", featureId);
 
       try {
         // Check if worktree exists

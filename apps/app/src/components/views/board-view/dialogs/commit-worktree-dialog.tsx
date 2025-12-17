@@ -1,0 +1,163 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { GitCommit, Loader2 } from "lucide-react";
+import { getElectronAPI } from "@/lib/electron";
+import { toast } from "sonner";
+
+interface WorktreeInfo {
+  path: string;
+  branch: string;
+  isMain: boolean;
+  hasChanges?: boolean;
+  changedFilesCount?: number;
+}
+
+interface CommitWorktreeDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  worktree: WorktreeInfo | null;
+  onCommitted: () => void;
+}
+
+export function CommitWorktreeDialog({
+  open,
+  onOpenChange,
+  worktree,
+  onCommitted,
+}: CommitWorktreeDialogProps) {
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleCommit = async () => {
+    if (!worktree || !message.trim()) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const api = getElectronAPI();
+      if (!api?.worktree?.commit) {
+        setError("Worktree API not available");
+        return;
+      }
+      const result = await api.worktree.commit(worktree.path, message);
+
+      if (result.success && result.result) {
+        if (result.result.committed) {
+          toast.success("Changes committed", {
+            description: `Commit ${result.result.commitHash} on ${result.result.branch}`,
+          });
+          onCommitted();
+          onOpenChange(false);
+          setMessage("");
+        } else {
+          toast.info("No changes to commit", {
+            description: result.result.message,
+          });
+        }
+      } else {
+        setError(result.error || "Failed to commit changes");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to commit");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && e.metaKey && !isLoading && message.trim()) {
+      handleCommit();
+    }
+  };
+
+  if (!worktree) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <GitCommit className="w-5 h-5" />
+            Commit Changes
+          </DialogTitle>
+          <DialogDescription>
+            Commit changes in the{" "}
+            <code className="font-mono bg-muted px-1 rounded">
+              {worktree.branch}
+            </code>{" "}
+            worktree.
+            {worktree.changedFilesCount && (
+              <span className="ml-1">
+                ({worktree.changedFilesCount} file
+                {worktree.changedFilesCount > 1 ? "s" : ""} changed)
+              </span>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="commit-message">Commit Message</Label>
+            <Textarea
+              id="commit-message"
+              placeholder="Describe your changes..."
+              value={message}
+              onChange={(e) => {
+                setMessage(e.target.value);
+                setError(null);
+              }}
+              onKeyDown={handleKeyDown}
+              className="min-h-[100px] font-mono text-sm"
+              autoFocus
+            />
+            {error && <p className="text-sm text-destructive">{error}</p>}
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Press <kbd className="px-1 py-0.5 bg-muted rounded text-xs">Cmd+Enter</kbd> to commit
+          </p>
+        </div>
+
+        <DialogFooter>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleCommit}
+            disabled={isLoading || !message.trim()}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Committing...
+              </>
+            ) : (
+              <>
+                <GitCommit className="w-4 h-4 mr-2" />
+                Commit
+              </>
+            )}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

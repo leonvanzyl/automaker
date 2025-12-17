@@ -12,10 +12,11 @@ const logger = createLogger("AutoMode");
 export function createRunFeatureHandler(autoModeService: AutoModeService) {
   return async (req: Request, res: Response): Promise<void> => {
     try {
-      const { projectPath, featureId, useWorktrees } = req.body as {
+      const { projectPath, featureId, useWorktrees, worktreePath } = req.body as {
         projectPath: string;
         featureId: string;
         useWorktrees?: boolean;
+        worktreePath?: string;
       };
 
       if (!projectPath || !featureId) {
@@ -29,8 +30,10 @@ export function createRunFeatureHandler(autoModeService: AutoModeService) {
       }
 
       // Start execution in background
+      // If worktreePath is provided, use it directly; otherwise let the service decide
+      // Default to false - worktrees should only be used when explicitly enabled
       autoModeService
-        .executeFeature(projectPath, featureId, useWorktrees ?? true, false)
+        .executeFeature(projectPath, featureId, useWorktrees ?? false, false, worktreePath)
         .catch((error) => {
           logger.error(`[AutoMode] Feature ${featureId} error:`, error);
         });

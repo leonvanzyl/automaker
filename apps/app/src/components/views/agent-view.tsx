@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
-import { useAppStore } from "@/store/app-store";
+import { useAppStore, type AgentModel } from "@/store/app-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageDropZone } from "@/components/ui/image-drop-zone";
@@ -18,6 +18,7 @@ import {
   Paperclip,
   X,
   ImageIcon,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useElectronAgent } from "@/hooks/use-electron-agent";
@@ -29,6 +30,13 @@ import {
   useKeyboardShortcutsConfig,
   KeyboardShortcut,
 } from "@/hooks/use-keyboard-shortcuts";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CLAUDE_MODELS } from "@/components/views/board-view/shared/model-constants";
 
 export function AgentView() {
   const { currentProject, setLastSelectedSession, getLastSelectedSession } =
@@ -41,6 +49,7 @@ export function AgentView() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [showSessionManager, setShowSessionManager] = useState(true);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<AgentModel>("sonnet");
 
   // Track if initial session has been loaded
   const initialSessionLoadedRef = useRef(false);
@@ -66,6 +75,7 @@ export function AgentView() {
   } = useElectronAgent({
     sessionId: currentSessionId || "",
     workingDirectory: currentProject?.path,
+    model: selectedModel,
     onToolUse: (toolName) => {
       setCurrentTool(toolName);
       setTimeout(() => setCurrentTool(null), 2000);
@@ -501,6 +511,43 @@ export function AgentView() {
 
           {/* Status indicators & actions */}
           <div className="flex items-center gap-3">
+            {/* Model Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1.5 text-xs font-medium"
+                  disabled={isProcessing}
+                  data-testid="model-selector"
+                >
+                  <Bot className="w-3.5 h-3.5" />
+                  {CLAUDE_MODELS.find((m) => m.id === selectedModel)?.label.replace("Claude ", "") || "Sonnet"}
+                  <ChevronDown className="w-3 h-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {CLAUDE_MODELS.map((model) => (
+                  <DropdownMenuItem
+                    key={model.id}
+                    onClick={() => setSelectedModel(model.id)}
+                    className={cn(
+                      "cursor-pointer",
+                      selectedModel === model.id && "bg-accent"
+                    )}
+                    data-testid={`model-option-${model.id}`}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">{model.label}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {model.description}
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {currentTool && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full border border-border">
                 <Wrench className="w-3 h-3 text-primary" />

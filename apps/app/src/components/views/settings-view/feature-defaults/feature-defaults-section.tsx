@@ -103,21 +103,20 @@ export function FeatureDefaultsSection({
         <div className="border-t border-border/30" />
 
         {/* Worktree Isolation Setting */}
-        <div className="group flex items-start space-x-3 p-3 rounded-xl transition-colors duration-200 -mx-3 opacity-60">
+        <div className="group flex items-start space-x-3 p-3 rounded-xl hover:bg-accent/30 transition-colors duration-200 -mx-3">
           <Checkbox
             id="use-worktrees"
             checked={useWorktrees}
             onCheckedChange={(checked) =>
               onUseWorktreesChange(checked === true)
             }
-            disabled={true}
             className="mt-1"
             data-testid="use-worktrees-checkbox"
           />
           <div className="space-y-1.5">
             <Label
               htmlFor="use-worktrees"
-              className="text-foreground font-medium flex items-center gap-2"
+              className="text-foreground cursor-pointer font-medium flex items-center gap-2"
             >
               <GitBranch className="w-4 h-4 text-brand-500" />
               Enable Git Worktree Isolation
@@ -128,9 +127,6 @@ export function FeatureDefaultsSection({
             <p className="text-xs text-muted-foreground/80 leading-relaxed">
               Creates isolated git branches for each feature. When disabled,
               agents work directly in the main project directory.
-            </p>
-            <p className="text-xs text-orange-500/80 leading-relaxed font-medium">
-              ⚠️ This feature is still under development and temporarily disabled.
             </p>
           </div>
         </div>

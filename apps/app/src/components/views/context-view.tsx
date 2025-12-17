@@ -19,6 +19,7 @@ import {
   BookOpen,
   EditIcon,
   Eye,
+  Pencil,
 } from "lucide-react";
 import {
   useKeyboardShortcuts,
@@ -56,6 +57,8 @@ export function ContextView() {
   const [editedContent, setEditedContent] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isRenameDialogOpen, setIsRenameDialogOpen] = useState(false);
+  const [renameFileName, setRenameFileName] = useState("");
   const [newFileName, setNewFileName] = useState("");
   const [newFileType, setNewFileType] = useState<"text" | "image">("text");
   const [uploadedImageData, setUploadedImageData] = useState<string | null>(
@@ -240,6 +243,60 @@ export function ContextView() {
     }
   };
 
+  // Rename selected file
+  const handleRenameFile = async () => {
+    const contextPath = getContextPath();
+    if (!selectedFile || !contextPath || !renameFileName.trim()) return;
+
+    const newName = renameFileName.trim();
+    if (newName === selectedFile.name) {
+      setIsRenameDialogOpen(false);
+      return;
+    }
+
+    try {
+      const api = getElectronAPI();
+      const newPath = `${contextPath}/${newName}`;
+
+      // Check if file with new name already exists
+      const exists = await api.exists(newPath);
+      if (exists) {
+        console.error("A file with this name already exists");
+        return;
+      }
+
+      // Read current file content
+      const result = await api.readFile(selectedFile.path);
+      if (!result.success || result.content === undefined) {
+        console.error("Failed to read file for rename");
+        return;
+      }
+
+      // Write to new path
+      await api.writeFile(newPath, result.content);
+
+      // Delete old file
+      await api.deleteFile(selectedFile.path);
+
+      setIsRenameDialogOpen(false);
+      setRenameFileName("");
+
+      // Reload files and select the renamed file
+      await loadContextFiles();
+
+      // Update selected file with new name and path
+      const renamedFile: ContextFile = {
+        name: newName,
+        type: isImageFile(newName) ? "image" : "text",
+        path: newPath,
+        content: result.content,
+      };
+      setSelectedFile(renamedFile);
+    } catch (error) {
+      console.error("Failed to rename file:", error);
+    }
+  };
+
   // Handle image upload
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -418,24 +475,40 @@ export function ContextView() {
             ) : (
               <div className="space-y-1">
                 {contextFiles.map((file) => (
-                  <button
+                  <div
                     key={file.path}
-                    onClick={() => handleSelectFile(file)}
                     className={cn(
-                      "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors",
+                      "group w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-colors",
                       selectedFile?.path === file.path
                         ? "bg-primary/20 text-foreground border border-primary/30"
                         : "text-muted-foreground hover:bg-accent hover:text-foreground"
                     )}
-                    data-testid={`context-file-${file.name}`}
                   >
-                    {file.type === "image" ? (
-                      <ImageIcon className="w-4 h-4 flex-shrink-0" />
-                    ) : (
-                      <FileText className="w-4 h-4 flex-shrink-0" />
-                    )}
-                    <span className="truncate text-sm">{file.name}</span>
-                  </button>
+                    <button
+                      onClick={() => handleSelectFile(file)}
+                      className="flex-1 flex items-center gap-2 text-left min-w-0"
+                      data-testid={`context-file-${file.name}`}
+                    >
+                      {file.type === "image" ? (
+                        <ImageIcon className="w-4 h-4 flex-shrink-0" />
+                      ) : (
+                        <FileText className="w-4 h-4 flex-shrink-0" />
+                      )}
+                      <span className="truncate text-sm">{file.name}</span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRenameFileName(file.name);
+                        setSelectedFile(file);
+                        setIsRenameDialogOpen(true);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-accent rounded transition-opacity"
+                      data-testid={`rename-context-file-${file.name}`}
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -726,6 +799,53 @@ export function ContextView() {
               data-testid="confirm-delete-file"
             >
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename Dialog */}
+      <Dialog open={isRenameDialogOpen} onOpenChange={setIsRenameDialogOpen}>
+        <DialogContent data-testid="rename-context-dialog">
+          <DialogHeader>
+            <DialogTitle>Rename Context File</DialogTitle>
+            <DialogDescription>
+              Enter a new name for "{selectedFile?.name}".
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rename-filename">File Name</Label>
+              <Input
+                id="rename-filename"
+                value={renameFileName}
+                onChange={(e) => setRenameFileName(e.target.value)}
+                placeholder="Enter new filename"
+                data-testid="rename-file-input"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && renameFileName.trim()) {
+                    handleRenameFile();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsRenameDialogOpen(false);
+                setRenameFileName("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleRenameFile}
+              disabled={!renameFileName.trim() || renameFileName === selectedFile?.name}
+              data-testid="confirm-rename-file"
+            >
+              Rename
             </Button>
           </DialogFooter>
         </DialogContent>

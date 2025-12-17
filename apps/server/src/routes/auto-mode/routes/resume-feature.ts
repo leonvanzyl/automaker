@@ -29,8 +29,9 @@ export function createResumeFeatureHandler(autoModeService: AutoModeService) {
       }
 
       // Start resume in background
+      // Default to false - worktrees should only be used when explicitly enabled
       autoModeService
-        .resumeFeature(projectPath, featureId, useWorktrees ?? true)
+        .resumeFeature(projectPath, featureId, useWorktrees ?? false)
         .catch((error) => {
           logger.error(`[AutoMode] Resume feature ${featureId} error:`, error);
         });

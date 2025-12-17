@@ -7,6 +7,7 @@ import { getElectronAPI } from "@/lib/electron";
 interface UseElectronAgentOptions {
   sessionId: string;
   workingDirectory?: string;
+  model?: string;
   onToolUse?: (toolName: string, toolInput: unknown) => void;
 }
 
@@ -33,6 +34,7 @@ interface UseElectronAgentResult {
 export function useElectronAgent({
   sessionId,
   workingDirectory,
+  model,
   onToolUse,
 }: UseElectronAgentOptions): UseElectronAgentResult {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -88,7 +90,8 @@ export function useElectronAgent({
           sessionId,
           content,
           workingDirectory,
-          imagePaths
+          imagePaths,
+          model
         );
 
         if (!result.success) {
@@ -104,7 +107,7 @@ export function useElectronAgent({
         throw err;
       }
     },
-    [sessionId, workingDirectory, isProcessing]
+    [sessionId, workingDirectory, model, isProcessing]
   );
 
   // Message queue for queuing messages when agent is busy
@@ -344,7 +347,8 @@ export function useElectronAgent({
           sessionId,
           content,
           workingDirectory,
-          imagePaths
+          imagePaths,
+          model
         );
 
         if (!result.success) {
@@ -359,7 +363,7 @@ export function useElectronAgent({
         setIsProcessing(false);
       }
     },
-    [sessionId, workingDirectory, isProcessing]
+    [sessionId, workingDirectory, model, isProcessing]
   );
 
   // Stop current execution

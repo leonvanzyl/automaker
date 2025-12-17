@@ -84,7 +84,8 @@ export interface AgentAPI {
     sessionId: string,
     message: string,
     workingDirectory?: string,
-    imagePaths?: string[]
+    imagePaths?: string[],
+    model?: string
   ) => Promise<{
     success: boolean;
     error?: string;
@@ -285,7 +286,10 @@ export interface SpecRegenerationAPI {
     error?: string;
   }>;
 
-  generateFeatures: (projectPath: string, maxFeatures?: number) => Promise<{
+  generateFeatures: (
+    projectPath: string,
+    maxFeatures?: number
+  ) => Promise<{
     success: boolean;
     error?: string;
   }>;
@@ -339,7 +343,8 @@ export interface AutoModeAPI {
   runFeature: (
     projectPath: string,
     featureId: string,
-    useWorktrees?: boolean
+    useWorktrees?: boolean,
+    worktreePath?: string
   ) => Promise<{
     success: boolean;
     passes?: boolean;
@@ -357,7 +362,8 @@ export interface AutoModeAPI {
 
   resumeFeature: (
     projectPath: string,
-    featureId: string
+    featureId: string,
+    useWorktrees?: boolean
   ) => Promise<{
     success: boolean;
     passes?: boolean;
@@ -383,7 +389,8 @@ export interface AutoModeAPI {
     projectPath: string,
     featureId: string,
     prompt: string,
-    imagePaths?: string[]
+    imagePaths?: string[],
+    worktreePath?: string
   ) => Promise<{
     success: boolean;
     passes?: boolean;
@@ -570,16 +577,6 @@ export interface FileDiffResult {
 }
 
 export interface WorktreeAPI {
-  // Revert feature changes by removing the worktree
-  revertFeature: (
-    projectPath: string,
-    featureId: string
-  ) => Promise<{
-    success: boolean;
-    removedPath?: string;
-    error?: string;
-  }>;
-
   // Merge feature worktree changes back to main branch
   mergeFeature: (
     projectPath: string,
@@ -620,6 +617,108 @@ export interface WorktreeAPI {
     error?: string;
   }>;
 
+  // List all worktrees with details (for worktree selector)
+  listAll: (
+    projectPath: string,
+    includeDetails?: boolean
+  ) => Promise<{
+    success: boolean;
+    worktrees?: Array<{
+      path: string;
+      branch: string;
+      isMain: boolean;
+      isCurrent: boolean; // Is this the currently checked out branch?
+      hasWorktree: boolean; // Does this branch have an active worktree?
+      hasChanges?: boolean;
+      changedFilesCount?: number;
+    }>;
+    error?: string;
+  }>;
+
+  // Create a new worktree
+  create: (
+    projectPath: string,
+    branchName: string,
+    baseBranch?: string
+  ) => Promise<{
+    success: boolean;
+    worktree?: {
+      path: string;
+      branch: string;
+      isNew: boolean;
+    };
+    error?: string;
+  }>;
+
+  // Delete a worktree
+  delete: (
+    projectPath: string,
+    worktreePath: string,
+    deleteBranch?: boolean
+  ) => Promise<{
+    success: boolean;
+    deleted?: {
+      worktreePath: string;
+      branch: string | null;
+    };
+    error?: string;
+  }>;
+
+  // Commit changes in a worktree
+  commit: (
+    worktreePath: string,
+    message: string
+  ) => Promise<{
+    success: boolean;
+    result?: {
+      committed: boolean;
+      commitHash?: string;
+      branch?: string;
+      message?: string;
+    };
+    error?: string;
+  }>;
+
+  // Push a worktree branch to remote
+  push: (
+    worktreePath: string,
+    force?: boolean
+  ) => Promise<{
+    success: boolean;
+    result?: {
+      branch: string;
+      pushed: boolean;
+      message: string;
+    };
+    error?: string;
+  }>;
+
+  // Create a pull request from a worktree
+  createPR: (
+    worktreePath: string,
+    options?: {
+      commitMessage?: string;
+      prTitle?: string;
+      prBody?: string;
+      baseBranch?: string;
+      draft?: boolean;
+    }
+  ) => Promise<{
+    success: boolean;
+    result?: {
+      branch: string;
+      committed: boolean;
+      commitHash?: string;
+      pushed: boolean;
+      prUrl?: string;
+      prCreated: boolean;
+      prError?: string;
+      browserUrl?: string;
+      ghCliAvailable?: boolean;
+    };
+    error?: string;
+  }>;
+
   // Get file diffs for a feature worktree
   getDiffs: (
     projectPath: string,
@@ -632,6 +731,129 @@ export interface WorktreeAPI {
     featureId: string,
     filePath: string
   ) => Promise<FileDiffResult>;
+
+  // Pull latest changes from remote
+  pull: (worktreePath: string) => Promise<{
+    success: boolean;
+    result?: {
+      branch: string;
+      pulled: boolean;
+      message: string;
+    };
+    error?: string;
+  }>;
+
+  // Create and checkout a new branch
+  checkoutBranch: (
+    worktreePath: string,
+    branchName: string
+  ) => Promise<{
+    success: boolean;
+    result?: {
+      previousBranch: string;
+      newBranch: string;
+      message: string;
+    };
+    error?: string;
+  }>;
+
+  // List all local branches
+  listBranches: (worktreePath: string) => Promise<{
+    success: boolean;
+    result?: {
+      currentBranch: string;
+      branches: Array<{
+        name: string;
+        isCurrent: boolean;
+        isRemote: boolean;
+      }>;
+      aheadCount: number;
+      behindCount: number;
+    };
+    error?: string;
+  }>;
+
+  // Switch to an existing branch
+  switchBranch: (
+    worktreePath: string,
+    branchName: string
+  ) => Promise<{
+    success: boolean;
+    result?: {
+      previousBranch: string;
+      currentBranch: string;
+      message: string;
+    };
+    error?: string;
+  }>;
+
+  // Open a worktree directory in the editor
+  openInEditor: (worktreePath: string) => Promise<{
+    success: boolean;
+    result?: {
+      message: string;
+      editorName?: string;
+    };
+    error?: string;
+  }>;
+
+  // Get the default code editor name
+  getDefaultEditor: () => Promise<{
+    success: boolean;
+    result?: {
+      editorName: string;
+      editorCommand: string;
+    };
+    error?: string;
+  }>;
+
+  // Initialize git repository in a project
+  initGit: (projectPath: string) => Promise<{
+    success: boolean;
+    result?: {
+      initialized: boolean;
+      message: string;
+    };
+    error?: string;
+  }>;
+
+  // Start a dev server for a worktree
+  startDevServer: (
+    projectPath: string,
+    worktreePath: string
+  ) => Promise<{
+    success: boolean;
+    result?: {
+      worktreePath: string;
+      port: number;
+      url: string;
+      message: string;
+    };
+    error?: string;
+  }>;
+
+  // Stop a dev server for a worktree
+  stopDevServer: (worktreePath: string) => Promise<{
+    success: boolean;
+    result?: {
+      worktreePath: string;
+      message: string;
+    };
+    error?: string;
+  }>;
+
+  // List all running dev servers
+  listDevServers: () => Promise<{
+    success: boolean;
+    result?: {
+      servers: Array<{
+        worktreePath: string;
+        port: number;
+        url: string;
+      }>;
+    };
+    error?: string;
+  }>;
 }
 
 export interface GitAPI {

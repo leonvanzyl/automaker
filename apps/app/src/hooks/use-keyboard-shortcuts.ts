@@ -68,6 +68,13 @@ function isInputFocused(): boolean {
     return true;
   }
 
+  // Check for any open dropdown menus (Radix UI uses role="menu")
+  // This prevents shortcuts from firing when user is typing in dropdown filters
+  const dropdownMenu = document.querySelector('[role="menu"]');
+  if (dropdownMenu) {
+    return true;
+  }
+
   return false;
 }
 

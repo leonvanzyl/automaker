@@ -4,6 +4,13 @@
 export * from "./core/elements";
 export * from "./core/interactions";
 export * from "./core/waiting";
+export * from "./core/constants";
+
+// API utilities
+export * from "./api/client";
+
+// Git utilities
+export * from "./git/worktree";
 
 // Project utilities
 export * from "./project/setup";

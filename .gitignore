@@ -17,8 +17,9 @@ out/
 /.automaker/*
 /.automaker/
 
-/logs
+.worktrees/
 
+/logs
 # Logs
 logs/
 *.log

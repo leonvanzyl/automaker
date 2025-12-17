@@ -7,6 +7,7 @@ import {
   WelcomeStep,
   CompleteStep,
   ClaudeSetupStep,
+  GitHubSetupStep,
 } from "./setup-view/steps";
 
 // Main Setup View
@@ -19,12 +20,13 @@ export function SetupView() {
   } = useSetupStore();
   const { setCurrentView } = useAppStore();
 
-  const steps = ["welcome", "claude", "complete"] as const;
+  const steps = ["welcome", "claude", "github", "complete"] as const;
   type StepName = (typeof steps)[number];
   const getStepName = (): StepName => {
     if (currentStep === "claude_detect" || currentStep === "claude_auth")
       return "claude";
     if (currentStep === "welcome") return "welcome";
+    if (currentStep === "github") return "github";
     return "complete";
   };
   const currentIndex = steps.indexOf(getStepName());
@@ -42,6 +44,10 @@ export function SetupView() {
         setCurrentStep("claude_detect");
         break;
       case "claude":
+        console.log("[Setup Flow] Moving to github step");
+        setCurrentStep("github");
+        break;
+      case "github":
         console.log("[Setup Flow] Moving to complete step");
         setCurrentStep("complete");
         break;
@@ -54,12 +60,20 @@ export function SetupView() {
       case "claude":
         setCurrentStep("welcome");
         break;
+      case "github":
+        setCurrentStep("claude_detect");
+        break;
     }
   };
 
   const handleSkipClaude = () => {
     console.log("[Setup Flow] Skipping Claude setup");
     setSkipClaudeSetup(true);
+    setCurrentStep("github");
+  };
+
+  const handleSkipGithub = () => {
+    console.log("[Setup Flow] Skipping GitHub setup");
     setCurrentStep("complete");
   };
 
@@ -107,6 +121,14 @@ export function SetupView() {
                   onNext={() => handleNext("claude")}
                   onBack={() => handleBack("claude")}
                   onSkip={handleSkipClaude}
+                />
+              )}
+
+              {currentStep === "github" && (
+                <GitHubSetupStep
+                  onNext={() => handleNext("github")}
+                  onBack={() => handleBack("github")}
+                  onSkip={handleSkipGithub}
                 />
               )}
 

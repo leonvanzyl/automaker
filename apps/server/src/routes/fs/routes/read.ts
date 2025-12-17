@@ -7,6 +7,23 @@ import fs from "fs/promises";
 import { validatePath } from "../../../lib/security.js";
 import { getErrorMessage, logError } from "../common.js";
 
+// Optional files that are expected to not exist in new projects
+// Don't log ENOENT errors for these to reduce noise
+const OPTIONAL_FILES = ["categories.json"];
+
+function isOptionalFile(filePath: string): boolean {
+  return OPTIONAL_FILES.some((optionalFile) => filePath.endsWith(optionalFile));
+}
+
+function isENOENT(error: unknown): boolean {
+  return (
+    error !== null &&
+    typeof error === "object" &&
+    "code" in error &&
+    error.code === "ENOENT"
+  );
+}
+
 export function createReadHandler() {
   return async (req: Request, res: Response): Promise<void> => {
     try {
@@ -22,7 +39,11 @@ export function createReadHandler() {
 
       res.json({ success: true, content });
     } catch (error) {
-      logError(error, "Read file failed");
+      // Don't log ENOENT errors for optional files (expected to be missing in new projects)
+      const shouldLog = !(isENOENT(error) && isOptionalFile(req.body?.filePath || ""));
+      if (shouldLog) {
+        logError(error, "Read file failed");
+      }
       res.status(500).json({ success: false, error: getErrorMessage(error) });
     }
   };

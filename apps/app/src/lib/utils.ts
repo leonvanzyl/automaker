@@ -35,3 +35,20 @@ export function truncateDescription(description: string, maxLength = 50): string
   }
   return `${description.slice(0, maxLength)}...`;
 }
+
+/**
+ * Normalize a file path to use forward slashes consistently.
+ * This is important for cross-platform compatibility (Windows uses backslashes).
+ */
+export function normalizePath(p: string): string {
+  return p.replace(/\\/g, "/");
+}
+
+/**
+ * Compare two paths for equality, handling cross-platform differences.
+ * Normalizes both paths to forward slashes before comparison.
+ */
+export function pathsEqual(p1: string | undefined | null, p2: string | undefined | null): boolean {
+  if (!p1 || !p2) return p1 === p2;
+  return normalizePath(p1) === normalizePath(p2);
+}

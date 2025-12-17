@@ -110,3 +110,117 @@ export async function getDragHandleForFeature(
 ): Promise<Locator> {
   return page.locator(`[data-testid="drag-handle-${featureId}"]`);
 }
+
+// ============================================================================
+// Add Feature Dialog
+// ============================================================================
+
+/**
+ * Click the add feature button
+ */
+export async function clickAddFeature(page: Page): Promise<void> {
+  await page.click('[data-testid="add-feature-button"]');
+  await page.waitForSelector('[data-testid="add-feature-dialog"]', { timeout: 5000 });
+}
+
+/**
+ * Fill in the add feature dialog
+ */
+export async function fillAddFeatureDialog(
+  page: Page,
+  description: string,
+  options?: { branch?: string; category?: string }
+): Promise<void> {
+  // Fill description (using the dropzone textarea)
+  const descriptionInput = page.locator('[data-testid="add-feature-dialog"] textarea').first();
+  await descriptionInput.fill(description);
+
+  // Fill branch if provided (it's a combobox autocomplete)
+  if (options?.branch) {
+    const branchButton = page.locator('[data-testid="feature-branch-input"]');
+    await branchButton.click();
+    // Wait for the popover to open
+    await page.waitForTimeout(300);
+    // Type in the command input
+    const commandInput = page.locator('[cmdk-input]');
+    await commandInput.fill(options.branch);
+    // Press Enter to select/create the branch
+    await commandInput.press("Enter");
+    // Wait for popover to close
+    await page.waitForTimeout(200);
+  }
+
+  // Fill category if provided (it's also a combobox autocomplete)
+  if (options?.category) {
+    const categoryButton = page.locator('[data-testid="feature-category-input"]');
+    await categoryButton.click();
+    await page.waitForTimeout(300);
+    const commandInput = page.locator('[cmdk-input]');
+    await commandInput.fill(options.category);
+    await commandInput.press("Enter");
+    await page.waitForTimeout(200);
+  }
+}
+
+/**
+ * Confirm the add feature dialog
+ */
+export async function confirmAddFeature(page: Page): Promise<void> {
+  await page.click('[data-testid="confirm-add-feature"]');
+  // Wait for dialog to close
+  await page.waitForFunction(
+    () => !document.querySelector('[data-testid="add-feature-dialog"]'),
+    { timeout: 5000 }
+  );
+}
+
+/**
+ * Add a feature with all steps in one call
+ */
+export async function addFeature(
+  page: Page,
+  description: string,
+  options?: { branch?: string; category?: string }
+): Promise<void> {
+  await clickAddFeature(page);
+  await fillAddFeatureDialog(page, description, options);
+  await confirmAddFeature(page);
+}
+
+// ============================================================================
+// Worktree Selector
+// ============================================================================
+
+/**
+ * Get the worktree selector element
+ */
+export async function getWorktreeSelector(page: Page): Promise<Locator> {
+  return page.locator('[data-testid="worktree-selector"]');
+}
+
+/**
+ * Click on a branch button in the worktree selector
+ */
+export async function selectWorktreeBranch(page: Page, branchName: string): Promise<void> {
+  const branchButton = page.getByRole("button", { name: new RegExp(branchName, "i") });
+  await branchButton.click();
+  await page.waitForTimeout(500); // Wait for UI to update
+}
+
+/**
+ * Get the currently selected branch in the worktree selector
+ */
+export async function getSelectedWorktreeBranch(page: Page): Promise<string | null> {
+  // The main branch button has aria-pressed="true" when selected
+  const selectedButton = page.locator('[data-testid="worktree-selector"] button[aria-pressed="true"]');
+  const text = await selectedButton.textContent().catch(() => null);
+  return text?.trim() || null;
+}
+
+/**
+ * Check if a branch button is visible in the worktree selector
+ */
+export async function isWorktreeBranchVisible(page: Page, branchName: string): Promise<boolean> {
+  const branchButton = page.getByRole("button", { name: new RegExp(branchName, "i") });
+  return await branchButton.isVisible().catch(() => false);
+}

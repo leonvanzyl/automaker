@@ -10,6 +10,16 @@ export interface CliStatus {
   error?: string;
 }
 
+// GitHub CLI Status
+export interface GhCliStatus {
+  installed: boolean;
+  authenticated: boolean;
+  version: string | null;
+  path: string | null;
+  user: string | null;
+  error?: string;
+}
+
 // Claude Auth Method - all possible authentication sources
 export type ClaudeAuthMethod =
   | "oauth_token_env"
@@ -45,6 +55,7 @@ export type SetupStep =
   | "welcome"
   | "claude_detect"
   | "claude_auth"
+  | "github"
   | "complete";
 
 export interface SetupState {
@@ -57,6 +68,9 @@ export interface SetupState {
   claudeCliStatus: CliStatus | null;
   claudeAuthStatus: ClaudeAuthStatus | null;
   claudeInstallProgress: InstallProgress;
+
+  // GitHub CLI state
+  ghCliStatus: GhCliStatus | null;
 
   // Setup preferences
   skipClaudeSetup: boolean;
@@ -75,6 +89,9 @@ export interface SetupActions {
   setClaudeAuthStatus: (status: ClaudeAuthStatus | null) => void;
   setClaudeInstallProgress: (progress: Partial<InstallProgress>) => void;
   resetClaudeInstallProgress: () => void;
+
+  // GitHub CLI
+  setGhCliStatus: (status: GhCliStatus | null) => void;
 
   // Preferences
   setSkipClaudeSetup: (skip: boolean) => void;
@@ -98,6 +115,8 @@ const initialState: SetupState = {
   claudeCliStatus: null,
   claudeAuthStatus: null,
   claudeInstallProgress: { ...initialInstallProgress },
+
+  ghCliStatus: null,
 
   skipClaudeSetup: shouldSkipSetup,
 };
@@ -144,6 +163,9 @@ export const useSetupStore = create<SetupState & SetupActions>()(
         set({
           claudeInstallProgress: { ...initialInstallProgress },
         }),
+
+      // GitHub CLI
+      setGhCliStatus: (status) => set({ ghCliStatus: status }),
 
       // Preferences
       setSkipClaudeSetup: (skip) => set({ skipClaudeSetup: skip }),
