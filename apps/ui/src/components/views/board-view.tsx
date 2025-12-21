@@ -728,7 +728,7 @@ export function BoardView() {
 
     // Check immediately, then every 3 seconds
     checkAndStartFeatures();
-    const interval = setInterval(checkAndStartFeatures, 1000);
+    const interval = setInterval(checkAndStartFeatures, 3000);
 
     return () => {
       // Mark as inactive to prevent any pending async operations from continuing

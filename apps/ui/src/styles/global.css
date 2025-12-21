@@ -597,15 +597,13 @@
   }
 
   /* Animated border for in-progress cards */
-  @keyframes border-rotate {
-    0% {
-      background-position: 0% 50%;
+  /* Using a subtle pulse animation instead of continuous gradient rotation for GPU efficiency */
+  @keyframes border-pulse {
+    0%, 100% {
+      opacity: 0.7;
     }
     50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
+      opacity: 1;
     }
   }
 
@@ -614,15 +612,20 @@
     border-radius: 0.75rem;
     padding: 2px;
     background: linear-gradient(
-      90deg,
+      135deg,
       var(--running-indicator),
-      color-mix(in oklch, var(--running-indicator), transparent 50%),
-      var(--running-indicator),
-      color-mix(in oklch, var(--running-indicator), transparent 50%),
+      color-mix(in oklch, var(--running-indicator), transparent 30%),
       var(--running-indicator)
     );
-    background-size: 200% 100%;
-    animation: border-rotate 3s ease infinite;
+    animation: border-pulse 2s ease-in-out infinite;
+  }
+
+  /* Pause animation when user prefers reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .animated-border-wrapper {
+      animation: none;
+      opacity: 1;
+    }
   }
 
   .animated-border-wrapper > * {

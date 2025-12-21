@@ -102,12 +102,13 @@ export function WorktreePanel({
 
   const toggleCollapsed = () => setIsCollapsed((prev) => !prev);
 
-  // Periodic interval check (1 second) to detect branch changes on disk
+  // Periodic interval check (5 seconds) to detect branch changes on disk
+  // Reduced from 1s to 5s to minimize GPU/CPU usage from frequent re-renders
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
     intervalRef.current = setInterval(() => {
       fetchWorktrees({ silent: true });
-    }, 1000);
+    }, 5000);
 
     return () => {
       if (intervalRef.current) {

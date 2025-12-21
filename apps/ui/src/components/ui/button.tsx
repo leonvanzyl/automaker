@@ -72,15 +72,15 @@ function Button({
       <button
         className={cn(
           buttonVariants({ variant, size }),
-          "p-[1px]", // Force 1px padding for the gradient border
+          "group p-[1px]", // Force 1px padding for the gradient border, group for hover animation
           className
         )}
         data-slot="button"
         disabled={isDisabled}
         {...props}
       >
-        {/* Animated rotating gradient border - smoother animation */}
-        <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] animated-outline-gradient opacity-75 transition-opacity duration-300 group-hover:opacity-100" />
+        {/* Animated rotating gradient border - only animates on hover for GPU efficiency */}
+        <span className="absolute inset-[-1000%] animated-outline-gradient opacity-75 transition-opacity duration-300 group-hover:animate-[spin_3s_linear_infinite] group-hover:opacity-100" />
 
         {/* Inner content container */}
         <span
