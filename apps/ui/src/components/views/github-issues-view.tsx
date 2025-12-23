@@ -493,6 +493,7 @@ export function GitHubIssuesView() {
                   onOpenExternal={() => handleOpenInGitHub(issue.url)}
                   formatDate={formatDate}
                   cachedValidation={cachedValidations.get(issue.number)}
+                  isValidating={validatingIssues.has(issue.number)}
                 />
               ))}
 
@@ -511,6 +512,7 @@ export function GitHubIssuesView() {
                       onOpenExternal={() => handleOpenInGitHub(issue.url)}
                       formatDate={formatDate}
                       cachedValidation={cachedValidations.get(issue.number)}
+                      isValidating={validatingIssues.has(issue.number)}
                     />
                   ))}
                 </>
@@ -776,6 +778,8 @@ interface IssueRowProps {
   formatDate: (date: string) => string;
   /** Cached validation for this issue (if any) */
   cachedValidation?: StoredValidation | null;
+  /** Whether validation is currently running for this issue */
+  isValidating?: boolean;
 }
 
 function IssueRow({
@@ -785,6 +789,7 @@ function IssueRow({
   onOpenExternal,
   formatDate,
   cachedValidation,
+  isValidating,
 }: IssueRowProps) {
   // Check if validation is unviewed (exists, not stale, not viewed)
   const hasUnviewedValidation =
@@ -852,8 +857,16 @@ function IssueRow({
             </span>
           )}
 
+          {/* Validating indicator */}
+          {isValidating && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in duration-200">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Analyzing...
+            </span>
+          )}
+
           {/* Unviewed validation indicator */}
-          {hasUnviewedValidation && (
+          {!isValidating && hasUnviewedValidation && (
             <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 animate-in fade-in duration-200">
               <Sparkles className="h-3 w-3" />
               Analysis Ready

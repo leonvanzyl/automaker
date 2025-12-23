@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Markdown } from '@/components/ui/markdown';
 import {
   CheckCircle2,
   XCircle,
@@ -162,9 +163,9 @@ export function ValidationDialog({
                 <Lightbulb className="h-4 w-4 text-muted-foreground" />
                 Analysis
               </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                {validationResult.reasoning}
-              </p>
+              <div className="bg-muted/30 p-3 rounded-lg border border-border">
+                <Markdown>{validationResult.reasoning}</Markdown>
+              </div>
             </div>
 
             {/* Related Files */}
@@ -191,9 +192,9 @@ export function ValidationDialog({
             {validationResult.suggestedFix && (
               <div className="space-y-2">
                 <h4 className="text-sm font-medium">Suggested Approach</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap bg-muted/30 p-3 rounded-lg border border-border">
-                  {validationResult.suggestedFix}
-                </p>
+                <div className="bg-muted/30 p-3 rounded-lg border border-border">
+                  <Markdown>{validationResult.suggestedFix}</Markdown>
+                </div>
               </div>
             )}
 
