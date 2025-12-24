@@ -15,7 +15,6 @@ import {
   FileCode,
   Lightbulb,
   AlertTriangle,
-  Loader2,
   Plus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -32,7 +31,6 @@ interface ValidationDialogProps {
   onOpenChange: (open: boolean) => void;
   issue: GitHubIssue | null;
   validationResult: IssueValidationResult | null;
-  isValidating: boolean;
   onConvertToTask?: (issue: GitHubIssue, validation: IssueValidationResult) => void;
 }
 
@@ -79,7 +77,6 @@ export function ValidationDialog({
   onOpenChange,
   issue,
   validationResult,
-  isValidating,
   onConvertToTask,
 }: ValidationDialogProps) {
   if (!issue) return null;
@@ -101,12 +98,7 @@ export function ValidationDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {isValidating ? (
-          <div className="flex flex-col items-center justify-center py-12 space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Analyzing codebase to validate issue...</p>
-          </div>
-        ) : validationResult ? (
+        {validationResult ? (
           <div className="space-y-6 py-4">
             {/* Verdict Badge */}
             <div className="flex items-center justify-between">

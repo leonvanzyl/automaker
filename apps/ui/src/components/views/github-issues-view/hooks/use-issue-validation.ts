@@ -205,11 +205,8 @@ export function useIssueValidation({
   }, []);
 
   const handleValidateIssue = useCallback(
-    async (
-      issue: GitHubIssue,
-      options: { showDialog?: boolean; forceRevalidate?: boolean } = {}
-    ) => {
-      const { showDialog = true, forceRevalidate = false } = options;
+    async (issue: GitHubIssue, options: { forceRevalidate?: boolean } = {}) => {
+      const { forceRevalidate = false } = options;
 
       if (!currentProject?.path) {
         toast.error('No project selected');
@@ -224,21 +221,17 @@ export function useIssueValidation({
 
       // Check for cached result - if fresh, show it directly (unless force revalidate)
       const cached = cachedValidations.get(issue.number);
-      if (cached && showDialog && !forceRevalidate) {
-        // Check if validation is stale
-        if (!isValidationStale(cached.validatedAt)) {
-          // Show cached result directly
-          onValidationResultChange(cached.result);
-          onShowValidationDialogChange(true);
-          return;
-        }
+      if (cached && !forceRevalidate && !isValidationStale(cached.validatedAt)) {
+        // Show cached result directly
+        onValidationResultChange(cached.result);
+        onShowValidationDialogChange(true);
+        return;
       }
 
-      // Start async validation
-      onValidationResultChange(null);
-      if (showDialog) {
-        onShowValidationDialogChange(true);
-      }
+      // Start async validation in background (no dialog - user will see badge when done)
+      toast.info(`Starting validation for issue #${issue.number}`, {
+        description: 'You will be notified when the analysis is complete',
+      });
 
       try {
         const api = getElectronAPI();
@@ -256,18 +249,12 @@ export function useIssueValidation({
 
           if (!result.success) {
             toast.error(result.error || 'Failed to start validation');
-            if (showDialog) {
-              onShowValidationDialogChange(false);
-            }
           }
           // On success, the result will come through the event stream
         }
       } catch (err) {
         console.error('[GitHubIssuesView] Validation error:', err);
         toast.error(err instanceof Error ? err.message : 'Failed to validate issue');
-        if (showDialog) {
-          onShowValidationDialogChange(false);
-        }
       }
     },
     [

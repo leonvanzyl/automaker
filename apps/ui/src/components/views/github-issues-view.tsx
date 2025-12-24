@@ -214,7 +214,6 @@ export function GitHubIssuesView() {
         onOpenChange={setShowValidationDialog}
         issue={selectedIssue}
         validationResult={validationResult}
-        isValidating={selectedIssue ? validatingIssues.has(selectedIssue.number) : false}
         onConvertToTask={handleConvertToTask}
       />
 
