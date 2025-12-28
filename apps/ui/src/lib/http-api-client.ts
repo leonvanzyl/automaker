@@ -766,6 +766,8 @@ export class HttpApiClient implements ElectronAPI {
       this.post('/api/github/validation-mark-viewed', { projectPath, issueNumber }),
     onValidationEvent: (callback: (event: IssueValidationEvent) => void) =>
       this.subscribeToEvent('issue-validation:event', callback as EventCallback),
+    getIssueComments: (projectPath: string, issueNumber: number, cursor?: string) =>
+      this.post('/api/github/issue-comments', { projectPath, issueNumber, cursor }),
   };
 
   // Workspace API
