@@ -1,8 +1,9 @@
 /**
  * POST /context/describe-image endpoint - Generate description for an image
  *
- * Uses Claude Haiku to analyze an image and generate a concise description
- * suitable for context file metadata.
+ * Uses AI to analyze an image and generate a concise description
+ * suitable for context file metadata. Model is configurable via
+ * phaseModels.imageDescriptionModel in settings (defaults to Haiku).
  *
  * IMPORTANT:
  * The agent runner (chat/auto-mode) sends images as multi-part content blocks (base64 image blocks),
@@ -13,7 +14,8 @@
 import type { Request, Response } from 'express';
 import { query } from '@anthropic-ai/claude-agent-sdk';
 import { createLogger, readImageAsBase64 } from '@automaker/utils';
-import { CLAUDE_MODEL_MAP } from '@automaker/types';
+import { DEFAULT_PHASE_MODELS } from '@automaker/types';
+import { resolveModelString } from '@automaker/model-resolver';
 import { createCustomOptions } from '../../../lib/sdk-options.js';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -337,10 +339,18 @@ export function createDescribeImageHandler(
         '[DescribeImage]'
       );
 
+      // Get model from phase settings
+      const settings = await settingsService?.getGlobalSettings();
+      const imageDescriptionModel =
+        settings?.phaseModels?.imageDescriptionModel || DEFAULT_PHASE_MODELS.imageDescriptionModel;
+      const model = resolveModelString(imageDescriptionModel);
+
+      logger.info(`[${requestId}] Using model: ${model}`);
+
       // Use the same centralized option builder used across the server (validates cwd)
       const sdkOptions = createCustomOptions({
         cwd,
-        model: CLAUDE_MODEL_MAP.haiku,
+        model,
         maxTurns: 1,
         allowedTools: [],
         autoLoadClaudeMd,
