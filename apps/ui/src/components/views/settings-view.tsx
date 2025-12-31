@@ -9,7 +9,6 @@ import { KeyboardMapDialog } from './settings-view/components/keyboard-map-dialo
 import { DeleteProjectDialog } from './settings-view/components/delete-project-dialog';
 import { SettingsNavigation } from './settings-view/components/settings-navigation';
 import { ApiKeysSection } from './settings-view/api-keys/api-keys-section';
-import { AIEnhancementSection } from './settings-view/ai-enhancement';
 import { PhaseModelsSection } from './settings-view/phase-models';
 import { AppearanceSection } from './settings-view/appearance/appearance-section';
 import { TerminalSection } from './settings-view/terminal/terminal-section';
@@ -47,8 +46,6 @@ export function SettingsView() {
     defaultAIProfileId,
     setDefaultAIProfileId,
     aiProfiles,
-    validationModel,
-    setValidationModel,
     autoLoadClaudeMd,
     setAutoLoadClaudeMd,
     enableSandboxMode,
@@ -105,8 +102,6 @@ export function SettingsView() {
             onPromptCustomizationChange={setPromptCustomization}
           />
         );
-      case 'ai-enhancement':
-        return <AIEnhancementSection />;
       case 'phase-models':
         return <PhaseModelsSection />;
       case 'appearance':
@@ -138,7 +133,6 @@ export function SettingsView() {
             defaultRequirePlanApproval={defaultRequirePlanApproval}
             defaultAIProfileId={defaultAIProfileId}
             aiProfiles={aiProfiles}
-            validationModel={validationModel}
             onShowProfilesOnlyChange={setShowProfilesOnly}
             onDefaultSkipTestsChange={setDefaultSkipTests}
             onEnableDependencyBlockingChange={setEnableDependencyBlocking}
@@ -146,7 +140,6 @@ export function SettingsView() {
             onDefaultPlanningModeChange={setDefaultPlanningMode}
             onDefaultRequirePlanApprovalChange={setDefaultRequirePlanApproval}
             onDefaultAIProfileIdChange={setDefaultAIProfileId}
-            onValidationModelChange={setValidationModel}
           />
         );
       case 'danger':
