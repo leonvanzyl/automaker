@@ -569,6 +569,20 @@ export class HttpApiClient implements ElectronAPI {
       credentials: 'include', // Include cookies for session auth
       body: body ? JSON.stringify(body) : undefined,
     });
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch {
+        // If parsing JSON fails, use status text
+      }
+      throw new Error(errorMessage);
+    }
+
     return response.json();
   }
 
@@ -579,6 +593,20 @@ export class HttpApiClient implements ElectronAPI {
       headers: this.getHeaders(),
       credentials: 'include', // Include cookies for session auth
     });
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch {
+        // If parsing JSON fails, use status text
+      }
+      throw new Error(errorMessage);
+    }
+
     return response.json();
   }
 
@@ -591,6 +619,20 @@ export class HttpApiClient implements ElectronAPI {
       credentials: 'include', // Include cookies for session auth
       body: body ? JSON.stringify(body) : undefined,
     });
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch {
+        // If parsing JSON fails, use status text
+      }
+      throw new Error(errorMessage);
+    }
+
     return response.json();
   }
 
@@ -602,6 +644,20 @@ export class HttpApiClient implements ElectronAPI {
       headers: this.getHeaders(),
       credentials: 'include', // Include cookies for session auth
     });
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        if (errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch {
+        // If parsing JSON fails, use status text
+      }
+      throw new Error(errorMessage);
+    }
+
     return response.json();
   }
 
