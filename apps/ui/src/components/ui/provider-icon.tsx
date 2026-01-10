@@ -13,6 +13,8 @@ const PROVIDER_ICON_KEYS = {
   deepseek: 'deepseek',
   qwen: 'qwen',
   nova: 'nova',
+  meta: 'meta',
+  mistral: 'mistral',
 } as const;
 
 type ProviderIconKey = keyof typeof PROVIDER_ICON_KEYS;
@@ -73,6 +75,17 @@ const PROVIDER_ICON_DEFINITIONS: Record<ProviderIconKey, ProviderIconDefinition>
     viewBox: '0 0 33 32',
     // Official Amazon Nova logo from lobehub/lobe-icons
     path: 'm17.865 23.28 1.533 1.543c.07.07.092.175.055.267l-2.398 6.118A1.24 1.24 0 0 1 15.9 32c-.51 0-.969-.315-1.155-.793l-3.451-8.804-5.582 5.617a.246.246 0 0 1-.35 0l-1.407-1.415a.25.25 0 0 1 0-.352l6.89-6.932a1.3 1.3 0 0 1 .834-.398 1.25 1.25 0 0 1 1.232.79l2.992 7.63 1.557-3.977a.248.248 0 0 1 .408-.085zm8.224-19.3-5.583 5.617-3.45-8.805a1.24 1.24 0 0 0-1.43-.762c-.414.092-.744.407-.899.805l-2.38 6.072a.25.25 0 0 0 .055.267l1.533 1.543c.127.127.34.082.407-.085L15.9 4.655l2.991 7.629a1.24 1.24 0 0 0 2.035.425l6.922-6.965a.25.25 0 0 0 0-.352L26.44 3.977a.246.246 0 0 0-.35 0zM8.578 17.566l-3.953-1.567 7.582-3.01c.49-.195.815-.685.785-1.24a1.3 1.3 0 0 0-.395-.84l-6.886-6.93a.246.246 0 0 0-.35 0L3.954 5.395a.25.25 0 0 0 0 .353l5.583 5.617-8.75 3.472a1.25 1.25 0 0 0 0 2.325l6.079 2.412a.24.24 0 0 0 .266-.055l1.533-1.542a.25.25 0 0 0-.085-.41zm22.434-2.73-6.08-2.412a.24.24 0 0 0-.265.055l-1.533 1.542a.25.25 0 0 0 .084.41L27.172 16l-7.583 3.01a1.255 1.255 0 0 0-.785 1.24c.018.317.172.614.395.84l6.89 6.931a.246.246 0 0 0 .35 0l1.406-1.415a.25.25 0 0 0 0-.352l-5.582-5.617 8.75-3.472a1.25 1.25 0 0 0 0-2.325z',
+    fill: '#FF9900',
+  },
+  // Meta and Mistral use custom standalone SVG components
+  // These placeholder entries prevent TypeScript errors
+  meta: {
+    viewBox: '0 0 24 24',
+    path: '',
+  },
+  mistral: {
+    viewBox: '0 0 24 24',
+    path: '',
   },
 };
 
@@ -287,7 +300,32 @@ function getUnderlyingModelIcon(model?: AgentModel | string): ProviderIconKey {
   const modelStr = typeof model === 'string' ? model.toLowerCase() : model;
 
   // Check for OpenCode models (opencode/, amazon-bedrock/, opencode-*)
-  if (modelStr.includes('opencode') || modelStr.includes('amazon-bedrock')) {
+  if (modelStr.includes('opencode')) {
+    // For OpenCode models, check which specific provider
+    if (modelStr.includes('amazon-bedrock')) {
+      // Bedrock-hosted models - detect the specific provider
+      if (modelStr.includes('anthropic') || modelStr.includes('claude')) {
+        return 'anthropic';
+      }
+      if (modelStr.includes('deepseek')) {
+        return 'deepseek';
+      }
+      if (modelStr.includes('nova')) {
+        return 'nova';
+      }
+      if (modelStr.includes('meta') || modelStr.includes('llama')) {
+        return 'meta';
+      }
+      if (modelStr.includes('mistral')) {
+        return 'mistral';
+      }
+      if (modelStr.includes('qwen')) {
+        return 'qwen';
+      }
+      // Default for Bedrock
+      return 'opencode';
+    }
+    // Native OpenCode models (opencode/big-pickle, etc.)
     return 'opencode';
   }
 
@@ -328,6 +366,11 @@ export function getProviderIconForModel(
     gemini: GeminiIcon,
     grok: GrokIcon,
     opencode: OpenCodeIcon,
+    deepseek: DeepSeekIcon,
+    qwen: QwenIcon,
+    nova: NovaIcon,
+    meta: MetaIcon,
+    mistral: MistralIcon,
   };
 
   return iconMap[iconKey] || AnthropicIcon;

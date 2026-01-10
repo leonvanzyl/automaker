@@ -27,7 +27,17 @@ import {
   REASONING_EFFORT_LABELS,
 } from '@/components/views/board-view/shared/model-constants';
 import { Check, ChevronsUpDown, Star, ChevronRight } from 'lucide-react';
-import { AnthropicIcon, CursorIcon, OpenAIIcon, OpenCodeIcon } from '@/components/ui/provider-icon';
+import {
+  AnthropicIcon,
+  CursorIcon,
+  OpenAIIcon,
+  OpenCodeIcon,
+  DeepSeekIcon,
+  NovaIcon,
+  QwenIcon,
+  MistralIcon,
+  MetaIcon,
+} from '@/components/ui/provider-icon';
 import { Button } from '@/components/ui/button';
 import {
   Command,
@@ -503,6 +513,28 @@ export function PhaseModelSelector({
     const isSelected = selectedModel === model.id;
     const isFavorite = favoriteModels.includes(model.id);
 
+    // Get the appropriate icon based on provider
+    const ProviderIcon = (() => {
+      switch (model.provider) {
+        case 'opencode':
+          return OpenCodeIcon;
+        case 'amazon-bedrock-anthropic':
+          return AnthropicIcon;
+        case 'amazon-bedrock-deepseek':
+          return DeepSeekIcon;
+        case 'amazon-bedrock-amazon':
+          return NovaIcon;
+        case 'amazon-bedrock-meta':
+          return MetaIcon;
+        case 'amazon-bedrock-mistral':
+          return MistralIcon;
+        case 'amazon-bedrock-qwen':
+          return QwenIcon;
+        default:
+          return OpenCodeIcon;
+      }
+    })();
+
     return (
       <CommandItem
         key={model.id}
@@ -514,7 +546,7 @@ export function PhaseModelSelector({
         className="group flex items-center justify-between py-2"
       >
         <div className="flex items-center gap-3 overflow-hidden">
-          <OpenCodeIcon
+          <ProviderIcon
             className={cn(
               'h-4 w-4 shrink-0',
               isSelected ? 'text-primary' : 'text-muted-foreground'
