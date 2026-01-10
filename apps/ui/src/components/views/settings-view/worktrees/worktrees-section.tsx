@@ -37,6 +37,8 @@ export function WorktreesSection({ useWorktrees, onUseWorktreesChange }: Worktre
   const setShowInitScriptIndicator = useAppStore((s) => s.setShowInitScriptIndicator);
   const getDefaultDeleteBranch = useAppStore((s) => s.getDefaultDeleteBranch);
   const setDefaultDeleteBranch = useAppStore((s) => s.setDefaultDeleteBranch);
+  const getAutoDismissInitScriptIndicator = useAppStore((s) => s.getAutoDismissInitScriptIndicator);
+  const setAutoDismissInitScriptIndicator = useAppStore((s) => s.setAutoDismissInitScriptIndicator);
   const [scriptContent, setScriptContent] = useState('');
   const [originalContent, setOriginalContent] = useState('');
   const [scriptExists, setScriptExists] = useState(false);
@@ -53,6 +55,11 @@ export function WorktreesSection({ useWorktrees, onUseWorktreesChange }: Worktre
   const defaultDeleteBranch = currentProject?.path
     ? getDefaultDeleteBranch(currentProject.path)
     : false;
+
+  // Get the auto-dismiss setting
+  const autoDismiss = currentProject?.path
+    ? getAutoDismissInitScriptIndicator(currentProject.path)
+    : true;
 
   // Check if there are unsaved changes
   const hasChanges = scriptContent !== originalContent;
@@ -228,6 +235,33 @@ export function WorktreesSection({ useWorktrees, onUseWorktreesChange }: Worktre
               <p className="text-xs text-muted-foreground/80 leading-relaxed">
                 Display a floating panel in the bottom-right corner showing init script execution
                 status and output when a worktree is created.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Auto-dismiss Init Script Indicator Toggle */}
+        {currentProject && showIndicator && (
+          <div className="group flex items-start space-x-3 p-3 rounded-xl hover:bg-accent/30 transition-colors duration-200 -mx-3 ml-6">
+            <Checkbox
+              id="auto-dismiss-indicator"
+              checked={autoDismiss}
+              onCheckedChange={(checked) => {
+                if (currentProject?.path) {
+                  setAutoDismissInitScriptIndicator(currentProject.path, checked === true);
+                }
+              }}
+              className="mt-1"
+            />
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="auto-dismiss-indicator"
+                className="text-foreground cursor-pointer font-medium flex items-center gap-2"
+              >
+                Auto-dismiss After Completion
+              </Label>
+              <p className="text-xs text-muted-foreground/80 leading-relaxed">
+                Automatically hide the indicator 5 seconds after the script completes.
               </p>
             </div>
           </div>

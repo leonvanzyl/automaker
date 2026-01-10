@@ -601,6 +601,8 @@ export interface ProjectSettings {
   // Worktree Behavior
   /** Default value for "delete branch" checkbox when deleting a worktree (default: false) */
   defaultDeleteBranchWithWorktree?: boolean;
+  /** Auto-dismiss init script indicator after completion (default: true) */
+  autoDismissInitScriptIndicator?: boolean;
 
   // Session Tracking
   /** Last chat session selected in this project */

@@ -13,9 +13,16 @@ interface SingleIndicatorProps {
   state: InitScriptState;
   onDismiss: (key: string) => void;
   isOnlyOne: boolean; // Whether this is the only indicator shown
+  autoDismiss: boolean; // Whether to auto-dismiss after completion
 }
 
-function SingleIndicator({ stateKey, state, onDismiss, isOnlyOne }: SingleIndicatorProps) {
+function SingleIndicator({
+  stateKey,
+  state,
+  onDismiss,
+  isOnlyOne,
+  autoDismiss,
+}: SingleIndicatorProps) {
   const [showLogs, setShowLogs] = useState(false);
   const logsEndRef = useRef<HTMLDivElement>(null);
 
@@ -34,6 +41,16 @@ function SingleIndicator({ stateKey, state, onDismiss, isOnlyOne }: SingleIndica
       setShowLogs(true);
     }
   }, [status, isOnlyOne]);
+
+  // Auto-dismiss after completion (5 seconds)
+  useEffect(() => {
+    if (autoDismiss && (status === 'success' || status === 'failed')) {
+      const timer = setTimeout(() => {
+        onDismiss(stateKey);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [status, autoDismiss, stateKey, onDismiss]);
 
   if (status === 'idle') return null;
 
@@ -123,7 +140,11 @@ function SingleIndicator({ stateKey, state, onDismiss, isOnlyOne }: SingleIndica
 export function InitScriptIndicator({ projectPath }: InitScriptIndicatorProps) {
   const getInitScriptStatesForProject = useAppStore((s) => s.getInitScriptStatesForProject);
   const clearInitScriptState = useAppStore((s) => s.clearInitScriptState);
+  const getAutoDismissInitScriptIndicator = useAppStore((s) => s.getAutoDismissInitScriptIndicator);
   const [dismissedKeys, setDismissedKeys] = useState<Set<string>>(new Set());
+
+  // Get auto-dismiss setting
+  const autoDismiss = getAutoDismissInitScriptIndicator(projectPath);
 
   // Get all init script states for this project
   const allStates = getInitScriptStatesForProject(projectPath);
@@ -180,6 +201,7 @@ export function InitScriptIndicator({ projectPath }: InitScriptIndicatorProps) {
           state={state}
           onDismiss={handleDismiss}
           isOnlyOne={activeStates.length === 1}
+          autoDismiss={autoDismiss}
         />
       ))}
     </div>

@@ -673,6 +673,10 @@ export interface AppState {
   // Whether to default the "delete branch" checkbox when deleting a worktree (default: false)
   defaultDeleteBranchByProject: Record<string, boolean>;
 
+  // Auto-dismiss Init Script Indicator (per-project, keyed by project path)
+  // Whether to auto-dismiss the indicator after completion (default: true)
+  autoDismissInitScriptIndicatorByProject: Record<string, boolean>;
+
   // UI State (previously in localStorage, now synced via API)
   /** Whether worktree panel is collapsed in board view */
   worktreePanelCollapsed: boolean;
@@ -1094,6 +1098,10 @@ export interface AppActions {
   setDefaultDeleteBranch: (projectPath: string, deleteBranch: boolean) => void;
   getDefaultDeleteBranch: (projectPath: string) => boolean;
 
+  // Auto-dismiss Init Script Indicator actions (per-project)
+  setAutoDismissInitScriptIndicator: (projectPath: string, autoDismiss: boolean) => void;
+  getAutoDismissInitScriptIndicator: (projectPath: string) => boolean;
+
   // UI State actions (previously in localStorage, now synced via API)
   setWorktreePanelCollapsed: (collapsed: boolean) => void;
   setLastProjectDir: (dir: string) => void;
@@ -1233,6 +1241,7 @@ const initialState: AppState = {
   worktreePanelVisibleByProject: {},
   showInitScriptIndicatorByProject: {},
   defaultDeleteBranchByProject: {},
+  autoDismissInitScriptIndicatorByProject: {},
   // UI State (previously in localStorage, now synced via API)
   worktreePanelCollapsed: false,
   lastProjectDir: '',
@@ -3177,6 +3186,21 @@ export const useAppStore = create<AppState & AppActions>()((set, get) => ({
   getDefaultDeleteBranch: (projectPath) => {
     // Default to false (don't delete branch) if not set
     return get().defaultDeleteBranchByProject[projectPath] ?? false;
+  },
+
+  // Auto-dismiss Init Script Indicator actions (per-project)
+  setAutoDismissInitScriptIndicator: (projectPath, autoDismiss) => {
+    set({
+      autoDismissInitScriptIndicatorByProject: {
+        ...get().autoDismissInitScriptIndicatorByProject,
+        [projectPath]: autoDismiss,
+      },
+    });
+  },
+
+  getAutoDismissInitScriptIndicator: (projectPath) => {
+    // Default to true (auto-dismiss enabled) if not set
+    return get().autoDismissInitScriptIndicatorByProject[projectPath] ?? true;
   },
 
   // UI State actions (previously in localStorage, now synced via API)
