@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useAppStore } from '@/store/app-store';
+import { useIsMobile } from '@/hooks/use-media-query';
 import type {
   ModelAlias,
   CursorModelId,
@@ -166,6 +167,9 @@ export function PhaseModelSelector({
     fetchCodexModels,
     dynamicOpencodeModels,
   } = useAppStore();
+
+  // Detect mobile devices to use inline expansion instead of nested popovers
+  const isMobile = useIsMobile();
 
   // Extract model and thinking/reasoning levels from value
   const selectedModel = value.model;
@@ -585,6 +589,107 @@ export function PhaseModelSelector({
     }
 
     // Model supports reasoning - show popover with reasoning effort options
+    // On mobile, render inline expansion instead of nested popover
+    if (isMobile) {
+      return (
+        <div key={model.id}>
+          <CommandItem
+            value={model.label}
+            onSelect={() => setExpandedCodexModel(isExpanded ? null : (model.id as CodexModelId))}
+            className="group flex items-center justify-between py-2"
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              <OpenAIIcon
+                className={cn(
+                  'h-4 w-4 shrink-0',
+                  isSelected ? 'text-primary' : 'text-muted-foreground'
+                )}
+              />
+              <div className="flex flex-col truncate">
+                <span className={cn('truncate font-medium', isSelected && 'text-primary')}>
+                  {model.label}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {isSelected && currentReasoning !== 'none'
+                    ? `Reasoning: ${REASONING_EFFORT_LABELS[currentReasoning]}`
+                    : model.description}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 ml-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  'h-6 w-6 hover:bg-transparent hover:text-yellow-500 focus:ring-0',
+                  isFavorite
+                    ? 'text-yellow-500 opacity-100'
+                    : 'opacity-0 group-hover:opacity-100 text-muted-foreground'
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFavoriteModel(model.id);
+                }}
+              >
+                <Star className={cn('h-3.5 w-3.5', isFavorite && 'fill-current')} />
+              </Button>
+              {isSelected && !isExpanded && <Check className="h-4 w-4 text-primary shrink-0" />}
+              <ChevronRight
+                className={cn(
+                  'h-4 w-4 text-muted-foreground transition-transform',
+                  isExpanded && 'rotate-90'
+                )}
+              />
+            </div>
+          </CommandItem>
+
+          {/* Inline reasoning effort options on mobile */}
+          {isExpanded && (
+            <div className="pl-6 pr-2 pb-2 space-y-1">
+              <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
+                Reasoning Effort
+              </div>
+              {REASONING_EFFORT_LEVELS.map((effort) => (
+                <button
+                  key={effort}
+                  onClick={() => {
+                    onChange({
+                      model: model.id as CodexModelId,
+                      reasoningEffort: effort,
+                    });
+                    setExpandedCodexModel(null);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    'w-full flex items-center justify-between px-2 py-2 rounded-sm text-sm',
+                    'hover:bg-accent cursor-pointer transition-colors',
+                    isSelected && currentReasoning === effort && 'bg-accent text-accent-foreground'
+                  )}
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium text-xs">{REASONING_EFFORT_LABELS[effort]}</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {effort === 'none' && 'No reasoning capability'}
+                      {effort === 'minimal' && 'Minimal reasoning'}
+                      {effort === 'low' && 'Light reasoning'}
+                      {effort === 'medium' && 'Moderate reasoning'}
+                      {effort === 'high' && 'Deep reasoning'}
+                      {effort === 'xhigh' && 'Maximum reasoning'}
+                    </span>
+                  </div>
+                  {isSelected && currentReasoning === effort && (
+                    <Check className="h-3.5 w-3.5 text-primary" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Desktop: Use nested popover
     return (
       <CommandItem
         key={model.id}
@@ -829,6 +934,106 @@ export function PhaseModelSelector({
     const isExpanded = expandedClaudeModel === model.id;
     const currentThinking = isSelected ? selectedThinkingLevel : 'none';
 
+    // On mobile, render inline expansion instead of nested popover
+    if (isMobile) {
+      return (
+        <div key={model.id}>
+          <CommandItem
+            value={model.label}
+            onSelect={() => setExpandedClaudeModel(isExpanded ? null : (model.id as ModelAlias))}
+            className="group flex items-center justify-between py-2"
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              <AnthropicIcon
+                className={cn(
+                  'h-4 w-4 shrink-0',
+                  isSelected ? 'text-primary' : 'text-muted-foreground'
+                )}
+              />
+              <div className="flex flex-col truncate">
+                <span className={cn('truncate font-medium', isSelected && 'text-primary')}>
+                  {model.label}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {isSelected && currentThinking !== 'none'
+                    ? `Thinking: ${THINKING_LEVEL_LABELS[currentThinking]}`
+                    : model.description}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 ml-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  'h-6 w-6 hover:bg-transparent hover:text-yellow-500 focus:ring-0',
+                  isFavorite
+                    ? 'text-yellow-500 opacity-100'
+                    : 'opacity-0 group-hover:opacity-100 text-muted-foreground'
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFavoriteModel(model.id);
+                }}
+              >
+                <Star className={cn('h-3.5 w-3.5', isFavorite && 'fill-current')} />
+              </Button>
+              {isSelected && !isExpanded && <Check className="h-4 w-4 text-primary shrink-0" />}
+              <ChevronRight
+                className={cn(
+                  'h-4 w-4 text-muted-foreground transition-transform',
+                  isExpanded && 'rotate-90'
+                )}
+              />
+            </div>
+          </CommandItem>
+
+          {/* Inline thinking level options on mobile */}
+          {isExpanded && (
+            <div className="pl-6 pr-2 pb-2 space-y-1">
+              <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
+                Thinking Level
+              </div>
+              {THINKING_LEVELS.map((level) => (
+                <button
+                  key={level}
+                  onClick={() => {
+                    onChange({
+                      model: model.id as ModelAlias,
+                      thinkingLevel: level,
+                    });
+                    setExpandedClaudeModel(null);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    'w-full flex items-center justify-between px-2 py-2 rounded-sm text-sm',
+                    'hover:bg-accent cursor-pointer transition-colors',
+                    isSelected && currentThinking === level && 'bg-accent text-accent-foreground'
+                  )}
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium text-xs">{THINKING_LEVEL_LABELS[level]}</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {level === 'none' && 'No extended thinking'}
+                      {level === 'low' && 'Light reasoning (1k tokens)'}
+                      {level === 'medium' && 'Moderate reasoning (10k tokens)'}
+                      {level === 'high' && 'Deep reasoning (16k tokens)'}
+                      {level === 'ultrathink' && 'Maximum reasoning (32k tokens)'}
+                    </span>
+                  </div>
+                  {isSelected && currentThinking === level && (
+                    <Check className="h-3.5 w-3.5 text-primary" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Desktop: Use nested popover
     return (
       <CommandItem
         key={model.id}
@@ -963,6 +1168,86 @@ export function PhaseModelSelector({
           ? 'Reasoning Mode'
           : 'Capacity Options';
 
+    // On mobile, render inline expansion instead of nested popover
+    if (isMobile) {
+      return (
+        <div key={group.baseId}>
+          <CommandItem
+            value={group.label}
+            onSelect={() => setExpandedGroup(isExpanded ? null : group.baseId)}
+            className="group flex items-center justify-between py-2"
+          >
+            <div className="flex items-center gap-3 overflow-hidden">
+              <CursorIcon
+                className={cn(
+                  'h-4 w-4 shrink-0',
+                  groupIsSelected ? 'text-primary' : 'text-muted-foreground'
+                )}
+              />
+              <div className="flex flex-col truncate">
+                <span className={cn('truncate font-medium', groupIsSelected && 'text-primary')}>
+                  {group.label}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {selectedVariant ? `Selected: ${selectedVariant.label}` : group.description}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 ml-2">
+              {groupIsSelected && !isExpanded && <Check className="h-4 w-4 text-primary shrink-0" />}
+              <ChevronRight
+                className={cn(
+                  'h-4 w-4 text-muted-foreground transition-transform',
+                  isExpanded && 'rotate-90'
+                )}
+              />
+            </div>
+          </CommandItem>
+
+          {/* Inline variant options on mobile */}
+          {isExpanded && (
+            <div className="pl-6 pr-2 pb-2 space-y-1">
+              <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
+                {variantTypeLabel}
+              </div>
+              {group.variants.map((variant) => (
+                <button
+                  key={variant.id}
+                  onClick={() => {
+                    onChange({ model: variant.id });
+                    setExpandedGroup(null);
+                    setOpen(false);
+                  }}
+                  className={cn(
+                    'w-full flex items-center justify-between px-2 py-2 rounded-sm text-sm',
+                    'hover:bg-accent cursor-pointer transition-colors',
+                    selectedModel === variant.id && 'bg-accent text-accent-foreground'
+                  )}
+                >
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium text-xs">{variant.label}</span>
+                    {variant.description && (
+                      <span className="text-[10px] text-muted-foreground">{variant.description}</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    {variant.badge && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                        {variant.badge}
+                      </span>
+                    )}
+                    {selectedModel === variant.id && <Check className="h-3.5 w-3.5 text-primary" />}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Desktop: Use nested popover
     return (
       <CommandItem
         key={group.baseId}
